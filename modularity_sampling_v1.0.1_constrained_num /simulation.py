@@ -387,6 +387,9 @@ class Simulation:
                     self.merge_patch.group1 = non_empty_groups[group1]
                     self.merge_patch.group2 = non_empty_groups[group2]
 
+
+                    ##need to fix this part , it's not number of nodes in the group 
+
                     if (len(self.merge_patch.group1) + len(self.merge_patch.group2))>self.max :
                         cnt = 0
                     else :
@@ -405,6 +408,8 @@ class Simulation:
 
                     self.split_patch.old_group = old_group
                     self.split_patch.new_group_membership_list = new_group_membership_list
+
+                    ##need to fix this part , it's not number of nodes in the group 
 
                     if (len(self.split_patch.old_group) or len(self.split_patch.new_group_membership_list)) < self.min :
                         cnt = 0
