@@ -132,7 +132,7 @@ class UndirectedNetwork(Network):
         # We use the CSR sparse matrix format for multiplication operations
         
         # First obtain the grouping matrix.
-        S = partition.as_matrix()
+        S = partition.as_matrix() 
         # Then the network's adjacency matrix.
         A = self.get_adjacency_matrix_sparse()
         
@@ -215,6 +215,7 @@ class UndirectedNetwork(Network):
         data = numpy.array(weights)
       
         A = sparse.csr_matrix((data,ij),shape=(n,n))
+        
         network = UndirectedNetwork(n,A)
 
         return network
