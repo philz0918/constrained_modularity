@@ -46,3 +46,26 @@ for i in range(10000) :
                 acceptance = False
             
 #inverse annealing
+
+
+    def calculate_rejection_threshold(self,n,c):
+        """Uses the COUPON COLLECTOR criterion to terminate
+           at a local optimum with high probability."""
+
+        number_of_individual_moves = n*c
+
+        if self.mergesplit_on:
+            number_of_split_moves = c
+            number_of_merge_moves = c*(c-1)/2
+            number_of_moves = number_of_individual_moves + number_of_split_moves + number_of_merge_moves
+            self.merge_probability = float(number_of_merge_moves) / number_of_moves
+            self.split_probability = float(number_of_split_moves) / number_of_moves
+        else:
+            number_of_moves = number_of_individual_moves
+            self.merge_probability = 0
+            self.split_probability = 0
+        
+        # We want a 95% confidence
+        beta = 1 - math.log(0.05)/math.log(number_of_moves)
+        
+        return beta*number_of_moves*math.log(number_of_moves)
