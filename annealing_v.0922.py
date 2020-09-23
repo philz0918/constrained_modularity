@@ -46,9 +46,9 @@ class Annealing:
         self.temp = 100
         self.modularity = 0
 
-
         # initial grouping with constrained number of groups
         self.comm = {node: np.random.randint(0, number_of_groups) for node in list(ntwk.nodes())}  # two groups for now
+        # fix here by sangpil 
         self.comms_set = list(set(self.comm.values()))
         self.number_of_groups = number_of_groups
 
@@ -63,7 +63,7 @@ class Annealing:
         new_comms = set(comm.values())
 
         # two cases one for all nodes has same comm, and others not
-
+        # fix here by sangpil
         if len(new_comms) == 1:
             selected = comm[node]
             # get from ground truth set of comms
@@ -82,11 +82,12 @@ class Annealing:
         # Alternatively, if move is worse but succeed temperature calculations
         better = bool(modularity >= self.modularity)
         temp_move = bool(np.random.rand() <= self.temp)  # ADD TEMPERATURE CALCULATION
-
+        
         if better or temp_move:
             self.comm = comm
             self.modularity = modularity
             self.temp *= 0.9
+            print(self.temp)
             return True
         else:
             self.temp *= 0.9
