@@ -45,6 +45,7 @@ class Annealing:
         self.n = ntwk.number_of_nodes()
         self.temp = 100
         self.modularity = 0
+        self.modularity_list = []
 
         # initial grouping with constrained number of groups
         self.comm = {node: np.random.randint(0, number_of_groups) for node in list(ntwk.nodes())}  # two groups for now
@@ -81,13 +82,14 @@ class Annealing:
         # If move is better, adjust the community and modularity accordingly
         # Alternatively, if move is worse but succeed temperature calculations
         better = bool(modularity >= self.modularity)
-        temp_move = bool(np.random.rand() <= self.temp)  # ADD TEMPERATURE CALCULATION
+        temp_move = bool(np.random.rand() <= np.exp((modularity-self.modularity)*(1/self.temp)))  
         
         if better or temp_move:
             self.comm = comm
             self.modularity = modularity
+            self.modularity_list.append(modularity)
             self.temp *= 0.9
-            print(self.temp)
+            print("Temperature:", self.temp)
             return True
         else:
             self.temp *= 0.9
@@ -101,7 +103,24 @@ class Annealing:
         elligible = [node for node, comm in self.comm.items() if comm == comm_choice]
 
         modul_list = []
-        while len(modul_list) >= 0:
+        modularity_repeat = bool(len(set(self.modularity_list[-5:])) != 1)
+        modularity_list_length = len(self.modularity_list)
+        while modularity_list_length < 5:
+            for _ in range(num_moves):
+                val = self.LocalMove(elligible)
+                if val:  # check if need to consider the other community now
+
+                    ##fix here by sangpil
+                    comm_choice = np.random.choice(list(self.comms_set))
+                    modul_list.append(self.modularity)
+                    elligible = [node for node, comm in self.comm.items() if comm == comm_choice]  # redesignate which nodes are elligible
+
+                else:
+                    continue
+
+                print("Max modularity currently: ", max(modul_list))
+
+        while modularity_repeat and modularity_list_length >= 5:
             # Do the local moves
             for _ in range(num_moves):
                 val = self.LocalMove(elligible)
@@ -115,7 +134,7 @@ class Annealing:
                 else:
                     continue
 
-                print(modul_list)
+                print("Max modularity currently: ", max(modul_list))
 
 
 
