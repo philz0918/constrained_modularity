@@ -10,6 +10,9 @@ import sys
 import pickle
 import random
 
+# debugging
+import time
+
 # External
 import networkx as nx
 import numpy as np
@@ -134,8 +137,7 @@ class Annealing:
 
 if __name__ == '__main__':
     G = nx.read_gml('sourcefile/karate.gml', 'id')
+    timer = time.time()
     Ann = Annealing(G, 2)
     Ann.helper_LocalMoves()
-
-
-
+    print("Run took {} seconds".format(time.time()-timer))
