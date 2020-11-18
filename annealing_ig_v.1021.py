@@ -10,24 +10,22 @@ import sys
 import pickle
 import random
 
-<<<<<<< HEAD
-=======
 # debugging
 import time
 
->>>>>>> 1e6a812b9ad4eebceb7c5c0dceb4ef67d50236dc
 # External
-import networkx as nx
+import igraph as ig
 import numpy as np
 import copy
+import pandas as pd
 
 # Custom
 
 # ----------------------------
-__author__ = "Daniel Kaiser"
+__author__ = ["Daniel Kaiser", "Sangpil Youm"]
 __credits__ = ["Daniel Kaiser", "Sangpil Youm"]
 
-__version__ = "0.1"
+__version__ = "0.4"
 __maintainer__ = "Daniel Kaiser"
 __email__ = "kaiserd@iu.edu"
 __status__ = "Development"
@@ -37,7 +35,7 @@ __status__ = "Development"
 class Annealing:
     '''Class to handle the network data to perform constrained SA on'''
 
-    def __init__(self, ntwk, number_of_groups):
+    def __init__(self, ntwk, number_of_groups, temp):
         '''Constructor for SANetwork class
         Inputs :
             ntwk : networkx Network
@@ -48,13 +46,13 @@ class Annealing:
             None
         '''
         self.ntwk = ntwk
-        self.n = ntwk.number_of_nodes()
-        self.temp = 100
+        self.n = ntwk.vcount()
+        self.temp = temp
         self.modularity = 0
         self.modularity_list = []
 
         # initial grouping with constrained number of groups
-        self.comm = {node: np.random.randint(0, number_of_groups) for node in list(ntwk.nodes())}  # two groups for now
+        self.comm = {node.index: np.random.randint(0, number_of_groups) for node in list(ntwk.vs())}  # two groups for now
         # fix here by sangpil
         self.comms_set = list(set(self.comm.values()))
         self.number_of_groups = number_of_groups
@@ -63,10 +61,6 @@ class Annealing:
         pass
 
     def LocalMove(self, elligible):
-<<<<<<< HEAD
-
-=======
->>>>>>> 1e6a812b9ad4eebceb7c5c0dceb4ef67d50236dc
         node = np.random.choice(elligible)  # Take a random node from the community being passed in
         comm = self.comm  # Make a copy to avoid prematurely altering "true" communities
 
@@ -86,8 +80,8 @@ class Annealing:
             comm[node] = np.random.choice(new_comms_list)
 
         # Getting modularity of post-local move partitions
-        Q_comms = [{x for x, y in comm.items() if y == c} for c in set(comm.values())]  # formatting for nx function
-        modularity = nx.algorithms.community.modularity(self.ntwk, Q_comms)
+        partition = ig.VertexClustering(self.ntwk, membership=list(comm.values()))
+        modularity = partition.q
 
         # If move is better, adjust the community and modularity accordingly
         # Alternatively, if move is worse but succeed temperature calculations
@@ -98,18 +92,14 @@ class Annealing:
             self.comm = comm
             self.modularity = modularity
             self.modularity_list.append(modularity)
-            self.temp *= 0.9
+            self.temp *= 0.995
             #print("Temperature:", self.temp)
             return True
         else:
-            self.temp *= 0.9
+            self.temp *= 0.995
             return False
 
-    def helper_LocalMoves(self, num_moves=100, comm={}, comm_choice=0):
-<<<<<<< HEAD
-
-=======
->>>>>>> 1e6a812b9ad4eebceb7c5c0dceb4ef67d50236dc
+    def helper_LocalMoves(self, num_moves=100, comm={}, comm_choice=0, stop=5):
         num_moves = (self.n) ** 2
         comm = self.comm
 
@@ -131,9 +121,17 @@ class Annealing:
                     modul_list.append(self.modularity)
                     elligible = [node for node, comm in self.comm.items() if
                                  comm == comm_choice]  # redesignate which nodes are elligible
+                    
+                    while not elligible:
+                        print("AHHHHHHHHHHH")
+                        comm_choice = np.random.choice(list(self.comms_set))
+                        elligible = [node for node, comm in self.comm.items() if
+                                 comm == comm_choice]
+
+
                     #fix here 1015
-                    if modularity_list_length >= 5 :
-                        modularity_repeat = bool(len(set(self.modularity_list[-5:])) != 1)
+                    if modularity_list_length >= stop :
+                        modularity_repeat = bool(len(set(self.modularity_list[-stop:])) != 1)
 
                 else:
                     continue
@@ -144,27 +142,46 @@ class Annealing:
                 print("Max modularity currently: ", max(modul_list))
 
 
-        print("Final modularity is last {} \n community {}".format(modul_list[-1],final_comm))
+        print("\n\n\n ~~~~~~~~~~~~~~~~~~ \n Final modularity is last {} \n community {} \n ~~~~~~~~~~~~~~~~~".format(modul_list[-1],final_comm))
+        return max(modul_list)
 
 if __name__ == '__main__':
-    G = nx.read_gml('sourcefile/karate.gml', 'id')
-<<<<<<< HEAD
-    Ann = Annealing(G, 2)
-    Ann.helper_LocalMoves()
+    # Read in graph
+    G = ig.read('sourcefile/karate.gml')
 
 
+    mods = []
+    stops = []
+    times = []
+    temps = []
 
-'''
+    for _ in range(100):    
+        for stop in [5,6,7,8,9,10]:
+            for temp in [99.5,99,95,90]:
+                # debug timer
+                timer = time.time()
 
-{1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 1, 10 : 1, 11: 0, 12: 0, 13: 0, 14: 0, 15: 1, 16: 1, 17: 0, 18: 0, 
-19: 1, 20: 0, 21: 1, 22: 0, 23: 1, 24: 1, 25: 1, 26: 1, 27: 1, 28: 1, 29: 1, 30: 1, 31: 1, 32: 1, 33: 1, 34: 1}
+                # declare annelaing class and run
+                Ann = Annealing(G, 2, temp=temp)
+                mod = Ann.helper_LocalMoves(stop=stop)    
+                
+            
+                # debug prints
+                print("\n\n\n Run took {} seconds\n\n\n\n\n\n\n".format(time.time()-timer))
 
-modularirty : 0.37179487179487003
+                # save data
+                mods.append(mod)
+                stops.append(stop)
+                times.append(time.time()-timer)
+                temps.append(temp)
 
-'''
-=======
-    timer = time.time()
-    Ann = Annealing(G, 2)
-    Ann.helper_LocalMoves()
-    print("Run took {} seconds".format(time.time()-timer))
->>>>>>> 1e6a812b9ad4eebceb7c5c0dceb4ef67d50236dc
+    df = pd.DataFrame({
+        "modularity" : mods,
+        "stopping condition" : stops,
+        "time" : times,
+        "temp": temps
+    })
+
+    df.to_csv('test.csv')
+
+    df.hist(modularity, groupby='stopping condition')
