@@ -302,5 +302,65 @@ opt_grouping, opt_Q, saving_group, modul_list = annealing_simulating(G = G, init
 
 
 
+def annealing_simulating(G, initial_temp, adj,n, cn,  s, k, m, cooling_constant, iteration) :
+    
+    svg_group_list = []
+    modul_list = []
+    old_Q = None
+    group_list = None
+    for i in range(iteration) :
+        
+        temp = new_temp(cooling_constant, initial_temp, i)
+        acceptance = False 
+        num_rejection = -1
+        #n numberof nodes, cn constrained number of groups
+        rej_threshold = cal_rej_thres(n,cn)
+        #print(rej_threshold)
+        
+        while acceptance is False :
+            
+            num_rejection +=1
+            #print(old_Q)
+            
+            #when the very first
+            if old_Q is None :
+                node_list , group_list = initial_grouping(n,cn)
+                s = partition_matrix(group_list)
+                old_Q = get_modularity(adj, s, k, m)
+                
+            #get new grouping by checking global and local movement
+            new_grouping,new_Q = grouping_update(G, group_list, cn)
+            
+            acceptance = check_acceptance(old_Q, new_Q, temp)
+            
+            #print(acceptance)
+            #print(num_rejection)
+            #if num_rejection > rej_threshold:
+                #break
+            
+            
+            if acceptance is True :
+                
+                #if new_grouping in svg_group_list :
+                    #acceptance = False
+                #else :
+                svg_group_list.append(new_grouping)
+                modul_list.append(new_Q)
+                print(modul_list[-1])
+                old_Q = new_Q
+                # accepted grouping would be old grouping and update group based on this grouping 
+                group_list = new_grouping
+                
+    opt = max(modul_list)
+    idx_opt = modul_list.index(opt)
+    
+    opt_group = svg_group_list[idx_opt]
+    
+    opt_grouping = svg_format(opt_group) 
+    opt_Q = opt
+    
+    return opt_grouping, opt_Q, svg_group_list, modul_list
+            
+
 
 
