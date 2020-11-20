@@ -191,7 +191,7 @@ class Annealing:
               comm[node] = np.random.choice(new_comms_list)
           else:
               selected = comm[node]
-              new_comms_list = [val for val in new_comms if val != selected]
+              new_comms_list = [val for val in self.comms_set if val != selected]
               comm[node] = np.random.choice(new_comms_list)
           
           num_comm = len(list(set(comm.values())))
